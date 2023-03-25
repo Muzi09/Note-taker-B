@@ -12,16 +12,21 @@ const jwt = require('jsonwebtoken')
 app.use(bodyParser.json())
 app.use(cors())
 
-try {
-    mongoose.connect(process.env.MONGODB_URI, {
-        useNewUrlParser: true,
-        useUnifiedTopology: true,
-      })
-    console.log('Connected to MongoDB')
-}
-catch (err) {   
-    console.log(err)
-}
+console.log(process.env.MONGODB_URI)
+
+
+mongoose.connect(process.env.MONGODB_URI, {
+    useNewUrlParser: true,
+    useUnifiedTopology: true,
+})
+
+const db = mongoose.connection
+
+db.on('error', console.error.bind(console, 'MongoDB connection error:'));
+
+db.once('open', function() {
+  console.log('Connected to MongoDB cluster')
+})
 
 const Schema = mongoose.Schema
 
@@ -165,13 +170,13 @@ app.get('/notes', async (req, res) => {
 
 app.post('/addnote', async (req, res) => {
     const { title, description } = req.body
-    
+
     try {
         const token = req.headers.authorization.split(' ')[1]
         const decoded = jwt.verify(token, process.env.JWT_SECRET)
         const userEmail = decoded.email
         const user = await User.findOne({ email: userEmail })
-        
+
         let newNote = {
             title: title,
             description: description,
