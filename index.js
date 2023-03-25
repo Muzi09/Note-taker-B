@@ -73,13 +73,13 @@ app.post('/signup', async (req, res) => {
     const salt = await bcrypt.genSalt(saltRounds)
     let hashedPassword = await bcrypt.hash(password, salt)
 
-    let newUser = new User ({
+    let newUser = {
         email: email,
         password: hashedPassword
-    })
+    }
 
     try {
-        let data = await newUser.save()
+        let data = await User.create(newUser)
         res.status(201).json({
             message: 'User created successfully',
             data
