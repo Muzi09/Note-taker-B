@@ -12,9 +12,13 @@ const jwt = require('jsonwebtoken')
 app.use(bodyParser.json())
 app.use(cors())
 
-
-mongoose.connect('mongodb://127.0.0.1:27017/Note_Taker')
-
+try {
+    mongoose.connect('mongodb://127.0.0.1:27017/Note_Taker')
+    console.log('Connected to MongoDB')
+}
+catch (err) {
+    console.log(err)
+}
 
 const Schema = mongoose.Schema
 
@@ -35,27 +39,6 @@ const noteSchema = new Schema({
 const Note = mongoose.model('Note', noteSchema)
 
 
-
-function isAuthenticated (req, res, next) {
-    const accessToken = req.headers.authorization
-
-    if (!accessToken) {
-        return res.status(401).json({
-            message: 'User is not authenticated. Please login or sign up'
-        })
-    }
-
-    try {
-        const decoded = jwt.verify(accessToken, process.env.JWT_SECRET)
-        req.user = decoded
-        next()
-    }
-    catch (err) {
-        return res.status(401).json({
-            message: 'Unauthorized'
-        })
-    }
-}
 
 
 
