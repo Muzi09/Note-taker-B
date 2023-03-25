@@ -12,7 +12,6 @@ const jwt = require('jsonwebtoken')
 app.use(bodyParser.json())
 app.use(cors())
 
-console.log(process.env.MONGODB_URI)
 
 
 mongoose.connect(process.env.MONGODB_URI, {
@@ -27,6 +26,9 @@ db.on('error', console.error.bind(console, 'MongoDB connection error:'));
 db.once('open', function() {
   console.log('Connected to MongoDB cluster')
 })
+
+
+
 
 const Schema = mongoose.Schema
 
@@ -71,13 +73,13 @@ app.post('/signup', async (req, res) => {
     const salt = await bcrypt.genSalt(saltRounds)
     let hashedPassword = await bcrypt.hash(password, salt)
 
-    let newUser = {
+    let newUser = new User ({
         email: email,
         password: hashedPassword
-    }
+    })
 
     try {
-        let data = await User.create(newUser)
+        let data = await newUser.save()
         res.status(201).json({
             message: 'User created successfully',
             data
