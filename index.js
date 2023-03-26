@@ -28,6 +28,19 @@ db.once('open', function() {
 })
 
 
+const currentDate = new Date();
+const formattedDate = currentDate.toLocaleString('en-US', { 
+  month: 'long', 
+  day: 'numeric', 
+  year: 'numeric', 
+  hour: 'numeric', 
+  minute: 'numeric', 
+  second: 'numeric', 
+  hour12: true 
+})
+
+console.log(formattedDate);
+
 
 
 const Schema = mongoose.Schema
@@ -43,7 +56,8 @@ const User = mongoose.model('User', userSchema)
 const noteSchema = new Schema({
     title: { type: String, required: true },
     description: { type: String, required: true },
-    userId: { type: Schema.Types.ObjectId, ref: 'User', required: true }
+    userId: { type: Schema.Types.ObjectId, ref: 'User', required: true }, 
+    date: { type: String }
 })
 
 const Note = mongoose.model('Note', noteSchema)
@@ -182,7 +196,8 @@ app.post('/addnote', async (req, res) => {
         let newNote = {
             title: title,
             description: description,
-            userId: user._id
+            userId: user._id,
+            date: currentDate
         }
 
         console.log(newNote)
@@ -224,10 +239,34 @@ app.delete('/deleteall', async (req, res) => {
 })
 
 
-app.delete('/deleteone', async (req, res) => {
-    console.log(req.body)
+app.post('/deleteone', async (req, res) => {
+    try {
+        const token = req.headers.authorization.split(' ')[1]
+        const decoded = jwt.verify(token, process.env.JWT_SECRET)
+        const userEmail = decoded.email
+        const user = await User.findOne({ email: userEmail })
 
+        const title = req.body.title
+        const note = await Note.findOneAndDelete({ userId: user._id, title: title })
+
+        if (!note) {
+            return res.status(404).json({
+                message: 'Note not found'
+            })
+        }
+
+        res.status(200).json({
+            message: 'Note deleted successfully',
+            data: note
+        })
+    }
+    catch (err) {
+        res.status(500).json({
+            message: err.message
+        })
+    }
 })
+
 
 
 app.listen(3001, () => {
